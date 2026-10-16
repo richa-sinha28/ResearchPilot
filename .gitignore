@@ -1,0 +1,27 @@
+
+# Python environment
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# Secrets and environment variables
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Model caches
+.cache/
+huggingface/
+models/
+
+# Generated Python files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
