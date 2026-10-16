@@ -1,4 +1,5 @@
 
+
 <div align="center">
 
 # ResearchPilot
@@ -40,13 +41,17 @@ https://github.com/user-attachments/assets/f777d888-2458-436c-ba40-74bb2368cabd
 
 ---
 
+
 ## System Workflow
 
-<!-- Replace the path below with the real location of your committed workflow image. -->
-
 <p align="center">
-  <img src="<img width="2752" height="1536" alt="Gemini_Generated_Image_g1c3pxg1c3pxg1c3" src="https://github.com/user-attachments/assets/7225a3d9-b74d-4208-8d75-a4564f284e62" />" alt="ResearchPilot system workflow" width="900">
+  <img
+    src="https://github.com/user-attachments/assets/146fe9b6-2355-4bbe-8d41-f7de1cde1a37"
+    alt="ResearchPilot system workflow"
+    width="900"
+  />
 </p>
+
 
 **How the pipeline works**
 
