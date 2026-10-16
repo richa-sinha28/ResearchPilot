@@ -13,6 +13,10 @@ Design notes
   scikit-learn) are imported lazily inside load_pipeline().
 * The FAISS index is only ever read, never rebuilt or overwritten.
 * Models are loaded with local_files_only=True; nothing is downloaded.
+* The compute device is chosen automatically: "cuda" when
+  torch.cuda.is_available() is True, otherwise "cpu". On CUDA the LLM is
+  loaded in float16; on CPU it is loaded in float32 (float16 is slow or
+  unsupported for many CPU operations).
 """
 
 import json
@@ -283,9 +287,18 @@ def get_paper_count():
 # 5. LOAD THE RETRIEVAL PIPELINE AND LOCAL LLM
 # ---------------------------------------------------------
 
+def _select_device(torch_module):
+    """Pick the compute device: "cuda" if available, otherwise "cpu"."""
+    return "cuda" if torch_module.cuda.is_available() else "cpu"
+
+
 @_cache_resource
 def load_pipeline():
-    """Load retrieval components and the local language model once."""
+    """Load retrieval components and the local language model once.
+
+    The device is detected automatically (CUDA when available, CPU
+    otherwise) and stored in the returned dictionary under "device".
+    """
 
     # Fail early if an artifact is missing.
     for path in (CHUNKS_PATH, FAISS_PATH):
@@ -306,18 +319,15 @@ def load_pipeline():
             f"A required package is missing: {exc}. Install it in the "
             "same environment that runs Streamlit, e.g. "
             "'pip install faiss-cpu sentence-transformers scikit-learn "
-            "transformers' plus a CUDA build of PyTorch."
+            "transformers torch'. For GPU use, install a CUDA build of "
+            "PyTorch; for CPU-only deployment, the CPU build is enough."
         ) from exc
 
-    if not torch.cuda.is_available():
-        raise RuntimeError(
-            "CUDA is unavailable to PyTorch, but ResearchPilot is "
-            "configured to use an NVIDIA GPU. Check that (1) the NVIDIA "
-            "driver is installed ('nvidia-smi' works), (2) PyTorch is a "
-            "CUDA build (torch.version.cuda is not None; installed "
-            f"torch: {torch.__version__}), and (3) Streamlit is launched "
-            "from the same virtual environment."
-        )
+    # Automatic device selection: GPU when present, CPU otherwise.
+    device = _select_device(torch)
+
+    # float16 is only safe/fast on CUDA; use float32 on CPU.
+    llm_dtype = torch.float16 if device == "cuda" else torch.float32
 
     chunks = load_chunks()
 
@@ -349,7 +359,7 @@ def load_pipeline():
         try:
             embedding_model = SentenceTransformer(
                 EMBEDDING_MODEL_NAME,
-                device="cuda",
+                device=device,
                 local_files_only=True,
             )
         except TypeError:
@@ -357,7 +367,7 @@ def load_pipeline():
             os.environ["HF_HUB_OFFLINE"] = "1"
             embedding_model = SentenceTransformer(
                 EMBEDDING_MODEL_NAME,
-                device="cuda",
+                device=device,
             )
 
         tokenizer = AutoTokenizer.from_pretrained(
@@ -367,10 +377,11 @@ def load_pipeline():
 
         llm = AutoModelForCausalLM.from_pretrained(
             LLM_MODEL_NAME,
-            torch_dtype=torch.float16,
+            torch_dtype=llm_dtype,
+            low_cpu_mem_usage=True,
             local_files_only=True,
         )
-        llm.to("cuda")
+        llm.to(device)
         llm.eval()
     except OSError as exc:
         raise RuntimeError(
@@ -378,7 +389,10 @@ def load_pipeline():
             f"({exc}). Models are loaded with local_files_only=True and "
             "are never downloaded automatically. Download "
             f"'{EMBEDDING_MODEL_NAME}' and '{LLM_MODEL_NAME}' once while "
-            "online (e.g. with huggingface-cli download), then retry."
+            "online (e.g. 'huggingface-cli download "
+            f"{EMBEDDING_MODEL_NAME}' and 'huggingface-cli download "
+            f"{LLM_MODEL_NAME}'), and make sure the deployment uses the "
+            "same cache folder (set HF_HOME if needed), then retry."
         ) from exc
 
     # The saved index must match the embedding model's dimension.
@@ -398,6 +412,7 @@ def load_pipeline():
         "tfidf_matrix": tfidf_matrix,
         "tokenizer": tokenizer,
         "llm": llm,
+        "device": device,
     }
 
 
@@ -671,6 +686,7 @@ def _generate_text(pipeline, messages, max_new_tokens=320):
         add_generation_prompt=True,
     )
 
+    # Inputs go to whichever device the model was loaded on (cuda or cpu).
     inputs = tokenizer(prompt, return_tensors="pt").to(llm.device)
 
     pad_id = tokenizer.pad_token_id

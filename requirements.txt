@@ -1,9 +1,10 @@
 
+
 streamlit
 faiss-cpu
 sentence-transformers
 scikit-learn
 transformers
-torch
 numpy
 langchain
+      
