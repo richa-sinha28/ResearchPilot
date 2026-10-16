@@ -1,3 +1,4 @@
+
 <div align="center">
 
 # ResearchPilot
@@ -32,7 +33,7 @@ How to get it:
 4. Keep that URL on its own line, exactly as generated. GitHub renders it as an inline video player.
 -->
 
-[INSERT GITHUB-GENERATED VIDEO URL HERE]
+[https://github.com/user-attachments/assets/f777d888-2458-436c-ba40-74bb2368cabd]
 
 *The demo shows a research question being entered in the Streamlit interface, the system retrieving relevant passages from the indexed papers, the local model generating an answer, and the retrieved sources being displayed alongside it.*
 
