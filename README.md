@@ -33,7 +33,8 @@ How to get it:
 4. Keep that URL on its own line, exactly as generated. GitHub renders it as an inline video player.
 -->
 
-[https://github.com/user-attachments/assets/f777d888-2458-436c-ba40-74bb2368cabd]
+
+https://github.com/user-attachments/assets/f777d888-2458-436c-ba40-74bb2368cabd
 
 *The demo shows a research question being entered in the Streamlit interface, the system retrieving relevant passages from the indexed papers, the local model generating an answer, and the retrieved sources being displayed alongside it.*
 
@@ -44,7 +45,7 @@ How to get it:
 <!-- Replace the path below with the real location of your committed workflow image. -->
 
 <p align="center">
-  <img src="[INSERT_WORKFLOW_IMAGE_PATH]" alt="ResearchPilot system workflow" width="900">
+  <img src="<img width="2752" height="1536" alt="Gemini_Generated_Image_g1c3pxg1c3pxg1c3" src="https://github.com/user-attachments/assets/7225a3d9-b74d-4208-8d75-a4564f284e62" />" alt="ResearchPilot system workflow" width="900">
 </p>
 
 **How the pipeline works**
